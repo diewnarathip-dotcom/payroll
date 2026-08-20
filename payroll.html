@@ -1,0 +1,627 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1">
+<title>ระบบเงินเดือน & สแกนเข้างาน</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jsQR/1.4.0/jsQR.js"></script>
+<style>
+:root{
+  --ink:#16233a; --ink-soft:#4a5b76; --bg:#eef2f6; --card:#ffffff; --line:#dbe3ec;
+  --teal:#0f766e; --teal-dark:#0a5a53; --teal-tint:#e3f3f1;
+  --amber:#c2760f; --amber-tint:#fbedd8;
+  --red:#c0392b; --red-tint:#fbe6e3;
+  --purple:#6d28d9; --purple-tint:#ede9fe;
+  --radius:14px;
+}
+*{box-sizing:border-box;}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Noto Sans Thai","Sarabun",sans-serif;min-height:100vh;}
+#app{max-width:520px;margin:0 auto;min-height:100vh;background:var(--bg);display:flex;flex-direction:column;}
+header.top{background:var(--teal);color:#fff;padding:18px 20px 16px;display:flex;align-items:center;justify-content:space-between;}
+header.top h1{font-size:17px;margin:0;font-weight:700;}
+header.top .sub{font-size:12px;opacity:.85;margin-top:2px;}
+header.top button{background:rgba(255,255,255,.16);color:#fff;border:none;border-radius:10px;padding:8px 12px;font-size:13px;cursor:pointer;}
+main{flex:1;padding:16px;padding-bottom:90px;}
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:16px;margin-bottom:14px;}
+.card h2{font-size:14px;margin:0 0 10px;color:var(--teal-dark);font-weight:700;}
+.row{display:flex;align-items:center;justify-content:space-between;gap:10px;}
+.muted{color:var(--ink-soft);font-size:13px;}
+.big-btn{width:100%;padding:16px;border:none;border-radius:var(--radius);background:var(--teal);color:#fff;font-size:16px;font-weight:700;cursor:pointer;margin-top:4px;}
+.big-btn.secondary{background:#fff;color:var(--teal);border:2px solid var(--teal);}
+.big-btn.amber{background:var(--amber);}
+.big-btn.red{background:var(--red);}
+.big-btn.purple{background:var(--purple);}
+.big-btn:disabled{opacity:.5;cursor:default;}
+.btn-sm{padding:8px 12px;border-radius:9px;border:1px solid var(--line);background:#fff;font-size:13px;cursor:pointer;color:var(--ink);}
+.btn-sm.teal{background:var(--teal-tint);border-color:var(--teal);color:var(--teal-dark);font-weight:600;}
+.btn-sm.red{background:var(--red-tint);border-color:var(--red);color:var(--red);font-weight:600;}
+.btn-sm.amber{background:var(--amber-tint);border-color:var(--amber);color:var(--amber);font-weight:600;}
+.btn-sm.purple{background:var(--purple-tint);border-color:var(--purple);color:var(--purple);font-weight:600;}
+input,select{width:100%;padding:11px 12px;border:1px solid var(--line);border-radius:10px;font-size:15px;background:#fdfdfe;color:var(--ink);}
+label{font-size:12.5px;color:var(--ink-soft);display:block;margin:10px 0 4px;}
+label:first-child{margin-top:0;}
+.field{margin-bottom:8px;}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.tag{display:inline-block;font-size:11.5px;padding:3px 9px;border-radius:999px;font-weight:700;}
+.tag.ok{background:var(--teal-tint);color:var(--teal-dark);}
+.tag.wait{background:#f1f3f6;color:var(--ink-soft);}
+.tag.amber{background:var(--amber-tint);color:var(--amber);}
+.tag.red{background:var(--red-tint);color:var(--red);}
+.tag.purple{background:var(--purple-tint);color:var(--purple);}
+nav.tabs{position:fixed;bottom:0;left:0;right:0;background:#fff;border-top:1px solid var(--line);max-width:520px;margin:0 auto;display:flex;}
+nav.tabs button{flex:1;border:none;background:none;padding:11px 4px 9px;font-size:10px;color:var(--ink-soft);cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:3px;}
+nav.tabs button.active{color:var(--teal);font-weight:700;}
+nav.tabs .ic{font-size:18px;}
+.center-screen{min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px;text-align:center;}
+.logo{font-size:40px;margin-bottom:6px;}
+.title{font-size:20px;font-weight:800;margin:0 0 4px;}
+.choice-btn{width:100%;max-width:340px;padding:18px;margin-top:14px;border-radius:16px;border:1px solid var(--line);background:#fff;font-size:16px;font-weight:700;cursor:pointer;color:var(--ink);display:flex;align-items:center;gap:12px;justify-content:center;}
+.choice-btn .ic{font-size:24px;}
+.pin-dots{display:flex;gap:12px;justify-content:center;margin:18px 0;}
+.pin-dots span{width:16px;height:16px;border-radius:50%;border:2px solid var(--teal);display:inline-block;}
+.pin-dots span.fill{background:var(--teal);}
+.keypad{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;width:100%;max-width:280px;}
+.keypad button{padding:18px 0;font-size:20px;border-radius:14px;border:1px solid var(--line);background:#fff;cursor:pointer;}
+.keypad button.wide{background:none;border:none;color:var(--ink-soft);font-size:14px;}
+.list-emp{width:100%;max-width:360px;}
+.list-emp button{width:100%;padding:14px;margin-bottom:8px;border-radius:12px;border:1px solid var(--line);background:#fff;font-size:15px;font-weight:600;cursor:pointer;}
+table{width:100%;border-collapse:collapse;font-size:13px;}
+th,td{text-align:left;padding:7px 6px;border-bottom:1px solid var(--line);}
+th{color:var(--ink-soft);font-weight:600;font-size:12px;}
+.empty{text-align:center;color:var(--ink-soft);font-size:13px;padding:22px 10px;}
+.modal-bg{position:fixed;inset:0;background:rgba(15,25,40,.55);display:flex;align-items:flex-end;z-index:50;}
+.modal{background:#fff;width:100%;max-width:520px;margin:0 auto;border-radius:18px 18px 0 0;padding:20px;max-height:90vh;overflow-y:auto;}
+.modal h3{margin:0 0 12px;font-size:16px;}
+#video-scan{width:100%;border-radius:12px;background:#000;max-height:260px;object-fit:cover;}
+.link{color:var(--teal);font-size:13px;text-decoration:underline;cursor:pointer;background:none;border:none;padding:0;}
+.banner{background:var(--amber-tint);border:1px solid var(--amber);color:#7a4d0a;padding:11px 14px;border-radius:12px;font-size:13px;margin-bottom:14px;font-weight:600;}
+.banner.red{background:var(--red-tint);border-color:var(--red);color:#7a1a0a;}
+.close-x{position:absolute;top:14px;right:16px;background:none;border:none;font-size:20px;color:var(--ink-soft);cursor:pointer;}
+.badge{display:inline-flex;align-items:center;justify-content:center;width:18px;height:18px;border-radius:50%;background:var(--red);color:#fff;font-size:10px;font-weight:800;margin-left:4px;}
+.emp-card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px;margin-bottom:10px;}
+.emp-card .name{font-weight:700;font-size:15px;margin-bottom:4px;}
+.stat-row{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px;}
+.stat-box{flex:1;min-width:80px;background:var(--bg);border-radius:10px;padding:10px;text-align:center;}
+.stat-box .val{font-size:17px;font-weight:800;color:var(--teal-dark);}
+.stat-box .lbl{font-size:11px;color:var(--ink-soft);margin-top:2px;}
+.net-box{background:var(--teal-tint);border:1px solid var(--teal);border-radius:12px;padding:14px;margin-top:10px;display:flex;align-items:center;justify-content:space-between;}
+.net-box .label{font-size:13px;color:var(--teal-dark);font-weight:600;}
+.net-box .amount{font-size:22px;font-weight:800;color:var(--teal-dark);}
+.advance-item{display:flex;align-items:center;justify-content:space-between;padding:9px 0;border-bottom:1px solid var(--line);}
+</style>
+</head>
+<body>
+<div id="app"></div>
+<script>
+let cameraStream=null,scanRAF=null;
+
+// ---- storage ----
+async function sget(key,fb){try{const r=await window.storage.get(key,true);return r?JSON.parse(r.value):fb;}catch(e){return fb;}}
+async function sset(key,val){try{await window.storage.set(key,JSON.stringify(val),true);}catch(e){console.error(e);}}
+
+// ---- utils ----
+function todayStr(){return new Date().toISOString().slice(0,10);}
+function ymStr(d){return (d||new Date()).toISOString().slice(0,7);}
+function nowTime(){return new Date().toTimeString().slice(0,5);}
+function pad(n){return n.toString().padStart(2,"0");}
+function thaiDate(s){const[y,m,d]=s.split("-").map(Number);const M=["ม.ค.","ก.พ.","มี.ค.","เม.ย.","พ.ค.","มิ.ย.","ก.ค.","ส.ค.","ก.ย.","ต.ค.","พ.ย.","ธ.ค."];return`${d} ${M[m-1]} ${y+543}`;}
+function periodOf(s){const[,, d]=s.split("-").map(Number);return d<=15?s.slice(0,7)+"-A":s.slice(0,7)+"-B";}
+function periodRange(pid){const[y,m,half]=pid.split("-");const yr=+y,mo=+m,last=new Date(yr,mo,0).getDate(),st=half==="A"?1:16,en=half==="A"?15:last;const ds=[];for(let d=st;d<=en;d++)ds.push(`${y}-${pad(mo)}-${pad(d)}`);return ds;}
+function periodLabel(pid){const[y,m,half]=pid.split("-");const M=["","ม.ค.","ก.พ.","มี.ค.","เม.ย.","พ.ค.","มิ.ย.","ก.ค.","ส.ค.","ก.ย.","ต.ค.","พ.ย.","ธ.ค."];return half==="A"?`1-15 ${M[+m]} ${+y+543}`:`16-สิ้นเดือน ${M[+m]} ${+y+543}`;}
+function timeToH(t){const[h,m]=t.split(":").map(Number);return h+m/60;}
+function fmtMoney(n){return"฿"+n.toLocaleString("th-TH",{minimumFractionDigits:0,maximumFractionDigits:0});}
+
+// ---- state ----
+const S={
+  screen:"landing",
+  ownerTab:"today",
+  pinBuffer:"",
+  empId:null,
+  schedMonth:ymStr(),
+  schedEmp:"all",
+  payrollPeriod:periodOf(todayStr()),
+  payrollEmp:null,   // null=all, empId=detail
+  scanMode:"in",
+};
+
+let EMPS=[], CFG={ownerPin:"0000",workEndTime:"17:00",shopName:"ร้านของฉัน"}, QRS={token:"",date:""}, ATT={}, PAY_STATUS={}, ADVANCES={};
+// ADVANCES structure: { empId: [ {id, date, amount, note, status:"pending"|"approved"|"rejected"} ] }
+
+async function loadAll(){
+  EMPS=await sget("employees",null);
+  if(!EMPS){EMPS=[1,2,3,4].map(i=>({id:"emp"+i,name:"พนักงานคนที่ "+i,dailyWage:0,otRate:0,pin:(1000+i*111).toString().slice(-4)}));await sset("employees",EMPS);}
+  CFG=await sget("settings",CFG);
+  QRS=await sget("qr-session",QRS);
+  PAY_STATUS=await sget("payroll-status",{});
+  ADVANCES=await sget("advances",{});
+}
+async function getAtt(ym){if(!ATT[ym])ATT[ym]=await sget("att-"+ym,{});return ATT[ym];}
+async function setAtt(ym,data){ATT[ym]=data;await sset("att-"+ym,data);}
+
+// pending advances count
+function pendingCount(){return Object.values(ADVANCES).flat().filter(a=>a.status==="pending").length;}
+
+// advances for period & emp
+function advancesInPeriod(empId,pid){
+  const dates=periodRange(pid);
+  return (ADVANCES[empId]||[]).filter(a=>a.status==="approved"&&dates.includes(a.date));
+}
+
+// ---- render router ----
+function render(){
+  const app=document.getElementById("app");
+  app.innerHTML="";
+  if(S.screen==="landing")return rLanding(app);
+  if(S.screen==="ownerPin")return rOwnerPin(app);
+  if(S.screen==="owner")return rOwner(app);
+  if(S.screen==="empSelect")return rEmpSelect(app);
+  if(S.screen==="empPin")return rEmpPin(app);
+  if(S.screen==="employee")return rEmpHome(app);
+}
+
+// ---- LANDING ----
+function rLanding(app){
+  const el=document.createElement("div");el.className="center-screen";
+  el.innerHTML=`<div class="logo">🕘</div><div class="title">${CFG.shopName}</div><div class="muted">ระบบสแกนเข้างาน & เงินเดือน</div>
+    <button class="choice-btn" id="bOwner"><span class="ic">🗝️</span> เจ้าของร้าน / ผู้จัดการ</button>
+    <button class="choice-btn" id="bEmp"><span class="ic">🙋</span> พนักงาน — สแกน / ดูตารางงาน</button>`;
+  app.appendChild(el);
+  el.querySelector("#bOwner").onclick=()=>{S.screen="ownerPin";S.pinBuffer="";render();};
+  el.querySelector("#bEmp").onclick=()=>{S.screen="empSelect";render();};
+}
+
+// ---- PIN PAD ----
+function rPinPad(container,len,onDone,title,sub){
+  container.innerHTML=`<div class="logo">🔒</div><div class="title">${title}</div><div class="muted">${sub||""}</div>
+    <div class="pin-dots" id="pd"></div><div class="keypad" id="kp"></div>
+    <button class="link" id="bk" style="margin-top:18px;">← กลับ</button>`;
+  const dots=container.querySelector("#pd"),kp=container.querySelector("#kp");
+  function upd(){dots.innerHTML="";for(let i=0;i<len;i++){const s=document.createElement("span");if(i<S.pinBuffer.length)s.className="fill";dots.appendChild(s);}}
+  upd();
+  ["1","2","3","4","5","6","7","8","9","","0","⌫"].forEach(k=>{
+    const b=document.createElement("button");
+    if(k===""){b.className="wide";b.disabled=true;b.style.visibility="hidden";}
+    else if(k==="⌫")b.className="wide";
+    b.textContent=k;
+    b.onclick=()=>{if(k==="⌫")S.pinBuffer=S.pinBuffer.slice(0,-1);else if(k&&S.pinBuffer.length<len)S.pinBuffer+=k;upd();if(S.pinBuffer.length===len)onDone(S.pinBuffer);};
+    kp.appendChild(b);
+  });
+  container.querySelector("#bk").onclick=()=>{S.pinBuffer="";S.screen="landing";render();};
+}
+
+function rOwnerPin(app){
+  const el=document.createElement("div");el.className="center-screen";app.appendChild(el);
+  function try1(val){
+    if(val===CFG.ownerPin){S.pinBuffer="";S.screen="owner";S.ownerTab="today";render();}
+    else{S.pinBuffer="";rPinPad(el,4,try1,"รหัสผ่านเจ้าของร้าน","❌ รหัสไม่ถูกต้อง ลองใหม่");}
+  }
+  rPinPad(el,4,try1,"รหัสผ่านเจ้าของร้าน","ค่าเริ่มต้น 0000");
+}
+
+// ---- EMP LOGIN ----
+function rEmpSelect(app){
+  const el=document.createElement("div");el.className="center-screen";
+  const btns=EMPS.map(e=>`<button data-id="${e.id}">${e.name}</button>`).join("");
+  el.innerHTML=`<div class="logo">🙋</div><div class="title">เลือกชื่อของคุณ</div><div class="list-emp" style="margin-top:14px;">${btns}</div><button class="link" id="bk" style="margin-top:10px;">← กลับ</button>`;
+  app.appendChild(el);
+  el.querySelectorAll(".list-emp button").forEach(b=>b.onclick=()=>{S.empId=b.dataset.id;S.pinBuffer="";S.screen="empPin";render();});
+  el.querySelector("#bk").onclick=()=>{S.screen="landing";render();};
+}
+function rEmpPin(app){
+  const el=document.createElement("div");el.className="center-screen";app.appendChild(el);
+  const emp=EMPS.find(e=>e.id===S.empId);
+  function try1(val){
+    if(val===emp.pin){S.pinBuffer="";S.screen="employee";render();}
+    else{S.pinBuffer="";rPinPad(el,4,try1,"รหัส PIN ของ "+emp.name,"❌ รหัสไม่ถูกต้อง");}
+  }
+  rPinPad(el,4,try1,"รหัส PIN ของ "+emp.name);
+}
+
+// ---- EMPLOYEE HOME ----
+async function rEmpHome(app){
+  const emp=EMPS.find(e=>e.id===S.empId);
+  const wrap=document.createElement("div");
+  wrap.innerHTML=`<header class="top"><div><h1>สวัสดี ${emp.name}</h1><div class="sub">${CFG.shopName}</div></div><button id="lo">ออก</button></header><main id="em"></main>`;
+  app.appendChild(wrap);
+  wrap.querySelector("#lo").onclick=()=>{S.screen="landing";S.empId=null;render();};
+  const main=wrap.querySelector("#em");
+  const today=todayStr(),ym=ymStr();
+  const md=await getAtt(ym);
+  const tr=(md[today]||{})[emp.id];
+  const myAdv=(ADVANCES[emp.id]||[]).filter(a=>a.status==="pending");
+
+  // scan card
+  const sc=document.createElement("div");sc.className="card";
+  if(!tr){
+    sc.innerHTML=`<h2>วันนี้ ${thaiDate(today)}</h2><p class="muted" style="margin-bottom:12px;">ยังไม่ได้สแกนเข้างานวันนี้</p><button class="big-btn" id="sIn">📷 สแกนเข้างาน</button>`;
+  } else if(!tr.timeOut){
+    sc.innerHTML=`<h2>วันนี้ ${thaiDate(today)}</h2><div style="margin-bottom:12px;"><span class="tag ok">เข้างานแล้ว ${tr.timeIn} น.</span></div><p class="muted" style="margin-bottom:10px;">ถ้าทำโอที ให้สแกนออกตอนเลิกงาน</p><button class="big-btn secondary" id="sOut">📷 สแกนออก (ทำโอที)</button>`;
+  } else {
+    sc.innerHTML=`<h2>วันนี้ ${thaiDate(today)}</h2><div style="display:flex;gap:8px;flex-wrap:wrap;"><span class="tag ok">เข้า ${tr.timeIn}</span><span class="tag amber">ออก ${tr.timeOut}</span>${tr.otHours>0?`<span class="tag purple">OT ${tr.otHours.toFixed(1)} ชม.</span>`:""}</div>`;
+  }
+  main.appendChild(sc);
+  if(!tr) sc.querySelector("#sIn").onclick=()=>openScan("in");
+  else if(!tr.timeOut) sc.querySelector("#sOut").onclick=()=>openScan("out");
+
+  // advance request card
+  const ac=document.createElement("div");ac.className="card";
+  ac.innerHTML=`<h2>เบิกเงินล่วงหน้า</h2>
+    ${myAdv.length?`<p class="muted" style="margin-bottom:8px;">รออนุมัติ ${myAdv.length} รายการ</p>`:""}
+    <div class="field"><label>จำนวนที่ต้องการเบิก (บาท)</label><input id="advAmt" type="number" min="1" placeholder="เช่น 500"></div>
+    <div class="field"><label>หมายเหตุ (ถ้ามี)</label><input id="advNote" placeholder="เช่น ค่ารถ ค่ากิน"></div>
+    <button class="big-btn purple" id="advSend" style="margin-top:8px;">ส่งคำขอเบิก</button>`;
+  main.appendChild(ac);
+  ac.querySelector("#advSend").onclick=async()=>{
+    const amt=Number(ac.querySelector("#advAmt").value);
+    const note=ac.querySelector("#advNote").value.trim();
+    if(!amt||amt<=0){alert("กรุณากรอกจำนวนเงิน");return;}
+    if(!ADVANCES[emp.id])ADVANCES[emp.id]=[];
+    ADVANCES[emp.id].push({id:"adv_"+Date.now(),date:todayStr(),amount:amt,note,status:"pending"});
+    await sset("advances",ADVANCES);
+    ac.querySelector("#advAmt").value="";
+    ac.querySelector("#advNote").value="";
+    alert("ส่งคำขอแล้ว รอเจ้าของอนุมัติ");
+    render();
+  };
+
+  // history card
+  const hc=document.createElement("div");hc.className="card";
+  const days=Object.keys(md).filter(d=>md[d][emp.id]).sort().reverse();
+  let rows=days.map(d=>{const r=md[d][emp.id];return`<tr><td>${thaiDate(d)}</td><td>${r.timeIn||"-"}</td><td>${r.timeOut||"-"}</td><td>${r.otHours?r.otHours.toFixed(1)+' ชม.':"-"}</td></tr>`;}).join("");
+  hc.innerHTML=`<h2>ตารางงานของฉัน — เดือนนี้</h2>${rows?`<table><thead><tr><th>วันที่</th><th>เข้า</th><th>ออก</th><th>OT</th></tr></thead><tbody>${rows}</tbody></table>`:`<div class="empty">ยังไม่มีข้อมูลเดือนนี้</div>`}`;
+  main.appendChild(hc);
+}
+
+// ---- SCAN ----
+function openScan(mode){
+  S.scanMode=mode;
+  const bg=document.createElement("div");bg.className="modal-bg";bg.id="smb";
+  bg.innerHTML=`<div class="modal" style="position:relative;"><button class="close-x" id="cls">✕</button>
+    <h3>${mode==="in"?"สแกนเข้างาน":"สแกนออก (โอที)"}</h3>
+    <video id="vs" autoplay playsinline muted style="width:100%;border-radius:12px;background:#000;max-height:260px;object-fit:cover;"></video>
+    <canvas id="sc" style="display:none;"></canvas>
+    <p class="muted" id="ss" style="margin:10px 0;">กำลังเปิดกล้อง...</p>
+    <div style="border-top:1px solid var(--line);margin:14px 0;padding-top:14px;">
+      <label>หรือกรอกรหัส 6 หลัก</label>
+      <input id="mc" maxlength="6" placeholder="รหัสจากหน้าจอเจ้าของร้าน" style="text-transform:uppercase;">
+      <button class="big-btn" style="margin-top:10px;" id="ms">ยืนยันรหัส</button>
+    </div></div>`;
+  document.body.appendChild(bg);
+  bg.querySelector("#cls").onclick=closeScn;
+  bg.querySelector("#ms").onclick=()=>procTok(bg.querySelector("#mc").value.trim().toUpperCase(),bg);
+  startCam(bg);
+}
+function closeScn(){stopCam();const b=document.getElementById("smb");if(b)b.remove();}
+async function startCam(bg){
+  const v=bg.querySelector("#vs"),cv=bg.querySelector("#sc"),st=bg.querySelector("#ss");
+  try{
+    cameraStream=await navigator.mediaDevices.getUserMedia({video:{facingMode:"environment"}});
+    v.srcObject=cameraStream;st.textContent="เล็ง QR code ให้อยู่ในกรอบ";
+    const ctx=cv.getContext("2d");
+    function tick(){
+      if(!document.getElementById("smb"))return;
+      if(v.readyState===v.HAVE_ENOUGH_DATA){cv.width=v.videoWidth;cv.height=v.videoHeight;ctx.drawImage(v,0,0,cv.width,cv.height);const id=ctx.getImageData(0,0,cv.width,cv.height);const c=jsQR(id.data,id.width,id.height);if(c&&c.data){procTok(c.data,bg);return;}}
+      scanRAF=requestAnimationFrame(tick);
+    }
+    scanRAF=requestAnimationFrame(tick);
+  }catch(e){st.textContent="เปิดกล้องไม่ได้ — กรอกรหัสด้านล่างแทน";}
+}
+function stopCam(){if(scanRAF)cancelAnimationFrame(scanRAF);if(cameraStream){cameraStream.getTracks().forEach(t=>t.stop());cameraStream=null;}}
+async function procTok(raw,bg){
+  let tok=raw;try{tok=JSON.parse(raw).token;}catch(e){}
+  const st=bg.querySelector("#ss");
+  if(!QRS.token||QRS.date!==todayStr()){st.textContent="เจ้าของยังไม่ได้สร้าง QR วันนี้";return;}
+  if(tok!==QRS.token){st.textContent="รหัสไม่ถูกต้อง ลองใหม่อีกครั้ง";return;}
+  stopCam();await recScan(S.scanMode);bg.remove();render();
+}
+async function recScan(mode){
+  const id=S.empId,today=todayStr(),ym=ymStr(),md=await getAtt(ym);
+  if(!md[today])md[today]={};
+  if(mode==="in"){if(!md[today][id])md[today][id]={timeIn:nowTime()};}
+  else{if(md[today][id]&&!md[today][id].timeOut){const t=nowTime();md[today][id].timeOut=t;md[today][id].otHours=Math.round(Math.max(0,timeToH(t)-timeToH(CFG.workEndTime))*100)/100;}}
+  await setAtt(ym,md);
+}
+
+// ---- OWNER SHELL ----
+function rOwner(app){
+  const pc=pendingCount();
+  const wrap=document.createElement("div");
+  wrap.innerHTML=`<header class="top"><div><h1>${CFG.shopName}</h1><div class="sub">โหมดเจ้าของร้าน</div></div><button id="lo">ออก</button></header>
+    <main id="om"></main>
+    <nav class="tabs">
+      <button data-tab="today"><span class="ic">🗓️</span>วันนี้</button>
+      <button data-tab="employees"><span class="ic">👥</span>พนักงาน</button>
+      <button data-tab="qr"><span class="ic">🔳</span>QR</button>
+      <button data-tab="advances"><span class="ic">💸</span>เบิก${pc?`<span class="badge">${pc}</span>`:""}</button>
+      <button data-tab="payroll"><span class="ic">💰</span>เงินเดือน</button>
+      <button data-tab="settings"><span class="ic">⚙️</span>ตั้งค่า</button>
+    </nav>`;
+  app.appendChild(wrap);
+  wrap.querySelector("#lo").onclick=()=>{S.screen="landing";render();};
+  wrap.querySelectorAll("nav.tabs button").forEach(b=>{
+    if(b.dataset.tab===S.ownerTab)b.classList.add("active");
+    b.onclick=()=>{S.ownerTab=b.dataset.tab;if(b.dataset.tab==="payroll")S.payrollEmp=null;render();};
+  });
+  const main=wrap.querySelector("#om");
+  if(S.ownerTab==="today")rTabToday(main);
+  if(S.ownerTab==="employees")rTabEmps(main);
+  if(S.ownerTab==="qr")rTabQR(main);
+  if(S.ownerTab==="advances")rTabAdvances(main);
+  if(S.ownerTab==="payroll")rTabPayroll(main);
+  if(S.ownerTab==="settings")rTabSettings(main);
+}
+
+// ---- TAB: TODAY ----
+async function rTabToday(main){
+  const today=todayStr(),ym=ymStr(),md=await getAtt(ym);
+  const td=md[today]||{};
+  const day=new Date().getDate(),last=new Date(new Date().getFullYear(),new Date().getMonth()+1,0).getDate();
+  let banner="";
+  if(day===15||day===last)banner=`<div class="banner">📅 วันนี้ถึงกำหนดจ่ายเงินเดือน! ไปที่แท็บ "เงินเดือน"</div>`;
+  const pc=pendingCount();
+  if(pc)banner+=`<div class="banner red">💸 มีคำขอเบิกเงิน ${pc} รายการ รอการอนุมัติ</div>`;
+  const rows=EMPS.map(e=>{
+    const r=td[e.id];
+    let tag=`<span class="tag wait">ยังไม่มา</span>`;
+    if(r&&r.timeOut)tag=`<span class="tag amber">เข้า ${r.timeIn} ออก ${r.timeOut}${r.otHours>0?" OT "+r.otHours.toFixed(1)+"ชม.":""}</span>`;
+    else if(r)tag=`<span class="tag ok">เข้าแล้ว ${r.timeIn} น.</span>`;
+    return`<div class="row" style="padding:9px 0;border-bottom:1px solid var(--line);"><span>${e.name}</span>${tag}</div>`;
+  }).join("");
+  main.innerHTML=`${banner}<div class="card"><h2>สรุปวันนี้ — ${thaiDate(today)}</h2>${rows}</div>`;
+}
+
+// ---- TAB: EMPLOYEES ----
+function rTabEmps(main){
+  const card=document.createElement("div");card.className="card";
+  const rows=EMPS.map(e=>`<div class="row" style="padding:10px 0;border-bottom:1px solid var(--line);">
+    <div><div style="font-weight:600;">${e.name}</div><div class="muted">฿${e.dailyWage}/วัน • OT ฿${e.otRate}/ชม. • PIN ${e.pin}</div></div>
+    <button class="btn-sm" data-id="${e.id}">แก้ไข</button></div>`).join("");
+  card.innerHTML=`<h2>รายชื่อพนักงาน (${EMPS.length})</h2>${rows||'<div class="empty">ยังไม่มีพนักงาน</div>'}
+    <button class="big-btn secondary" id="addE" style="margin-top:12px;">+ เพิ่มพนักงาน</button>`;
+  main.appendChild(card);
+  card.querySelectorAll("button[data-id]").forEach(b=>b.onclick=()=>openEmpEdit(EMPS.find(e=>e.id===b.dataset.id)));
+  card.querySelector("#addE").onclick=()=>openEmpEdit(null);
+}
+function openEmpEdit(emp){
+  const isNew=!emp;
+  const bg=document.createElement("div");bg.className="modal-bg";
+  bg.innerHTML=`<div class="modal" style="position:relative;"><button class="close-x" id="cx">✕</button>
+    <h3>${isNew?"เพิ่มพนักงาน":"แก้ไขพนักงาน"}</h3>
+    <div class="field"><label>ชื่อพนักงาน</label><input id="fn" value="${isNew?"":emp.name}"></div>
+    <div class="grid2">
+      <div class="field"><label>ค่าแรง/วัน (บาท)</label><input id="fw" type="number" value="${isNew?0:emp.dailyWage}"></div>
+      <div class="field"><label>ค่าโอที/ชม. (บาท)</label><input id="fo" type="number" value="${isNew?0:emp.otRate}"></div>
+    </div>
+    <div class="field"><label>PIN 4 หลัก</label><input id="fp" maxlength="4" value="${isNew?"":emp.pin}"></div>
+    <button class="big-btn" id="sv" style="margin-top:14px;">บันทึก</button>
+    ${!isNew?`<button class="big-btn red" id="dl" style="margin-top:10px;">ลบพนักงานนี้</button>`:""}
+  </div>`;
+  document.body.appendChild(bg);
+  bg.querySelector("#cx").onclick=()=>bg.remove();
+  bg.querySelector("#sv").onclick=async()=>{
+    const name=bg.querySelector("#fn").value.trim();
+    const wage=Number(bg.querySelector("#fw").value)||0;
+    const ot=Number(bg.querySelector("#fo").value)||0;
+    const pin=bg.querySelector("#fp").value.trim().padStart(4,"0").slice(0,4);
+    if(!name){alert("กรุณากรอกชื่อ");return;}
+    if(isNew){EMPS.push({id:"emp_"+Date.now(),name,dailyWage:wage,otRate:ot,pin});}
+    else{const i=EMPS.findIndex(e=>e.id===emp.id);EMPS[i]={...emp,name,dailyWage:wage,otRate:ot,pin};}
+    await sset("employees",EMPS);bg.remove();render();
+  };
+  if(!isNew)bg.querySelector("#dl").onclick=async()=>{if(confirm(`ลบ ${emp.name}?`)){EMPS=EMPS.filter(e=>e.id!==emp.id);await sset("employees",EMPS);bg.remove();render();}};
+}
+
+// ---- TAB: QR ----
+async function rTabQR(main){
+  const today=todayStr(),valid=QRS.date===today&&QRS.token;
+  const card=document.createElement("div");card.className="card";
+  card.innerHTML=`<h2>QR code วันนี้</h2><p class="muted">สร้างทุกเช้า — ให้พนักงานสแกนตอนมา และตอนเลิกถ้าทำโอที</p>
+    <div style="display:flex;justify-content:center;margin:16px 0;" id="qrh"></div>
+    ${valid?`<p style="text-align:center;font-size:24px;font-weight:800;letter-spacing:4px;color:var(--teal-dark);">${QRS.token}</p><p class="muted" style="text-align:center;">รหัสสำรองสำหรับกรอกเอง</p>`:`<p class="empty">ยังไม่ได้สร้าง QR วันนี้</p>`}
+    <button class="big-btn ${valid?"secondary":""}" id="gqr" style="margin-top:8px;">${valid?"สร้างรหัสใหม่":"สร้าง QR code วันนี้"}</button>`;
+  main.appendChild(card);
+  if(valid)new QRCode(card.querySelector("#qrh"),{text:JSON.stringify({token:QRS.token,date:QRS.date}),width:200,height:200});
+  card.querySelector("#gqr").onclick=async()=>{QRS={token:Math.random().toString(36).slice(2,8).toUpperCase(),date:today};await sset("qr-session",QRS);render();};
+}
+
+// ---- TAB: ADVANCES ----
+async function rTabAdvances(main){
+  // group by emp
+  const pending=[], approved=[], rejected=[];
+  EMPS.forEach(e=>{
+    (ADVANCES[e.id]||[]).forEach(a=>{
+      const item={...a,empName:e.name,empId:e.id};
+      if(a.status==="pending")pending.push(item);
+      else if(a.status==="approved")approved.push(item);
+      else rejected.push(item);
+    });
+  });
+  pending.sort((a,b)=>a.date<b.date?1:-1);
+  approved.sort((a,b)=>a.date<b.date?1:-1);
+
+  if(pending.length){
+    const card=document.createElement("div");card.className="card";
+    card.innerHTML=`<h2>รออนุมัติ (${pending.length})</h2>`+
+      pending.map(a=>`<div class="advance-item" data-id="${a.id}" data-eid="${a.empId}">
+        <div><div style="font-weight:600;">${a.empName}</div><div class="muted">${thaiDate(a.date)}${a.note?" · "+a.note:""}</div></div>
+        <div style="display:flex;align-items:center;gap:8px;">
+          <span style="font-weight:800;">${fmtMoney(a.amount)}</span>
+          <button class="btn-sm teal" data-act="ok" data-id="${a.id}" data-eid="${a.empId}">✓</button>
+          <button class="btn-sm red" data-act="no" data-id="${a.id}" data-eid="${a.empId}">✗</button>
+        </div>
+      </div>`).join("");
+    main.appendChild(card);
+    card.querySelectorAll("button[data-act]").forEach(b=>b.onclick=async()=>{
+      const eid=b.dataset.eid,aid=b.dataset.id,act=b.dataset.act;
+      const idx=ADVANCES[eid].findIndex(a=>a.id===aid);
+      if(idx>=0)ADVANCES[eid][idx].status=act==="ok"?"approved":"rejected";
+      await sset("advances",ADVANCES);render();
+    });
+  }
+
+  // approved this month grouped by emp
+  const thisYm=ymStr();
+  const approvedThisMonth=approved.filter(a=>a.date.startsWith(thisYm));
+  if(approvedThisMonth.length){
+    const card=document.createElement("div");card.className="card";
+    card.innerHTML=`<h2>อนุมัติแล้ว — เดือนนี้</h2>`+
+      approvedThisMonth.map(a=>`<div class="advance-item">
+        <div><div style="font-weight:600;">${a.empName}</div><div class="muted">${thaiDate(a.date)}${a.note?" · "+a.note:""}</div></div>
+        <div style="display:flex;align-items:center;gap:8px;"><span style="font-weight:800;">${fmtMoney(a.amount)}</span><span class="tag ok">อนุมัติ</span></div>
+      </div>`).join("");
+    main.appendChild(card);
+  }
+
+  if(!pending.length&&!approvedThisMonth.length){
+    const card=document.createElement("div");card.className="card";
+    card.innerHTML=`<div class="empty">ยังไม่มีคำขอเบิกเงิน</div>`;
+    main.appendChild(card);
+  }
+}
+
+// ---- TAB: PAYROLL ----
+async function rTabPayroll(main){
+  // if viewing detail of one emp
+  if(S.payrollEmp){return rPayrollDetail(main,S.payrollEmp);}
+
+  // period picker
+  const currentPid=periodOf(todayStr());
+  const pids=[];
+  let cur=new Date();
+  for(let i=0;i<4;i++){const y=cur.getFullYear(),m=cur.getMonth()+1;pids.push(`${y}-${pad(m)}-B`,`${y}-${pad(m)}-A`);cur.setMonth(cur.getMonth()-1);}
+  const ups=[...new Set(pids)].filter(p=>p<=currentPid).sort().reverse().slice(0,6);
+  if(!ups.includes(S.payrollPeriod))S.payrollPeriod=currentPid;
+
+  const card=document.createElement("div");card.className="card";
+  card.innerHTML=`<h2>สรุปเงินเดือน — รายคน</h2>
+    <div class="field"><label>เลือกงวด</label><select id="pp">${ups.map(p=>`<option value="${p}" ${p===S.payrollPeriod?"selected":""}>${periodLabel(p)}</option>`).join("")}</select></div>
+    <div id="pb"></div>`;
+  main.appendChild(card);
+  card.querySelector("#pp").onchange=e=>{S.payrollPeriod=e.target.value;render();};
+
+  const dates=periodRange(S.payrollPeriod);
+  const mNeeded=[...new Set(dates.map(d=>d.slice(0,7)))];
+  const mData={};for(const ym of mNeeded)mData[ym]=await getAtt(ym);
+
+  let grandTotal=0,grandNet=0;
+  const cards=EMPS.map(e=>{
+    let days=0,otH=0;
+    dates.forEach(d=>{const r=(mData[d.slice(0,7)][d]||{})[e.id];if(r){days++;otH+=r.otHours||0;}});
+    const wage=days*e.dailyWage,otPay=Math.round(otH*e.otRate),adv=advancesInPeriod(e.id,S.payrollPeriod).reduce((s,a)=>s+a.amount,0);
+    const gross=wage+otPay,net=gross-adv;
+    grandTotal+=gross;grandNet+=net;
+    const paid=(PAY_STATUS[S.payrollPeriod+"-"+e.id]||{}).paid;
+    return{e,days,otH,wage,otPay,adv,gross,net,paid};
+  });
+
+  const pb=card.querySelector("#pb");
+  cards.forEach(({e,days,otH,wage,otPay,adv,gross,net,paid})=>{
+    const ec=document.createElement("div");ec.className="emp-card";
+    ec.innerHTML=`<div class="row"><div class="name">${e.name}</div><span class="tag ${paid?"ok":"amber"}">${paid?"จ่ายแล้ว ✓":"ยังไม่จ่าย"}</span></div>
+      <div class="stat-row">
+        <div class="stat-box"><div class="val">${days}</div><div class="lbl">วันมา</div></div>
+        <div class="stat-box"><div class="val">${otH.toFixed(1)}</div><div class="lbl">ชม.OT</div></div>
+        <div class="stat-box"><div class="val">${fmtMoney(gross)}</div><div class="lbl">ค่าแรงรวม</div></div>
+        ${adv>0?`<div class="stat-box" style="background:var(--red-tint);"><div class="val" style="color:var(--red);">${fmtMoney(adv)}</div><div class="lbl">หักเบิก</div></div>`:""}
+      </div>
+      <div class="net-box"><span class="label">ต้องจ่าย</span><span class="amount">${fmtMoney(net)}</span></div>
+      <button class="big-btn ${paid?"secondary":""}" data-eid="${e.id}" style="margin-top:10px;">${paid?"ดูรายละเอียด / ยกเลิก":"ดูรายละเอียด / จ่ายแล้ว"}</button>`;
+    pb.appendChild(ec);
+    ec.querySelector("button[data-eid]").onclick=()=>{S.payrollEmp=e.id;render();};
+  });
+
+  // grand total
+  const gt=document.createElement("div");gt.className="card";
+  gt.innerHTML=`<h2>รวมทั้งหมด — ${periodLabel(S.payrollPeriod)}</h2>
+    <div class="row" style="margin-bottom:8px;"><span class="muted">ค่าแรงรวมก่อนหัก</span><span style="font-weight:700;">${fmtMoney(grandTotal)}</span></div>
+    <div class="row"><span style="font-weight:700;font-size:15px;">ยอดที่ต้องจ่ายสุทธิ</span><span style="font-weight:800;font-size:20px;color:var(--teal-dark);">${fmtMoney(grandNet)}</span></div>`;
+  main.appendChild(gt);
+}
+
+async function rPayrollDetail(main,empId){
+  const emp=EMPS.find(e=>e.id===empId);
+  const dates=periodRange(S.payrollPeriod);
+  const mNeeded=[...new Set(dates.map(d=>d.slice(0,7)))];
+  const mData={};for(const ym of mNeeded)mData[ym]=await getAtt(ym);
+
+  let days=0,otH=0;
+  const attRows=[];
+  dates.forEach(d=>{
+    const r=(mData[d.slice(0,7)][d]||{})[emp.id];
+    if(r){
+      days++;otH+=r.otHours||0;
+      attRows.push(`<tr><td>${thaiDate(d)}</td><td>${r.timeIn||"-"}</td><td>${r.timeOut||"-"}</td><td>${r.otHours?r.otHours.toFixed(1):"-"}</td></tr>`);
+    }
+  });
+  const wage=days*emp.dailyWage,otPay=Math.round(otH*emp.otRate);
+  const advList=advancesInPeriod(emp.id,S.payrollPeriod);
+  const adv=advList.reduce((s,a)=>s+a.amount,0);
+  const net=wage+otPay-adv;
+  const pid=S.payrollPeriod+"-"+emp.id;
+  const paid=(PAY_STATUS[pid]||{}).paid;
+
+  const wrap=document.createElement("div");
+  wrap.innerHTML=`<div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;">
+    <button class="btn-sm" id="bk">← กลับ</button>
+    <span style="font-weight:700;font-size:16px;">${emp.name} — ${periodLabel(S.payrollPeriod)}</span>
+  </div>`;
+  main.appendChild(wrap);
+  wrap.querySelector("#bk").onclick=()=>{S.payrollEmp=null;render();};
+
+  // summary card
+  const sc=document.createElement("div");sc.className="card";
+  sc.innerHTML=`<h2>สรุปรายได้</h2>
+    <div class="row" style="padding:7px 0;border-bottom:1px solid var(--line);"><span class="muted">วันที่มาทำงาน</span><span>${days} วัน</span></div>
+    <div class="row" style="padding:7px 0;border-bottom:1px solid var(--line);"><span class="muted">ค่าแรง (${days} × ฿${emp.dailyWage})</span><span>${fmtMoney(wage)}</span></div>
+    <div class="row" style="padding:7px 0;border-bottom:1px solid var(--line);"><span class="muted">ค่าโอที (${otH.toFixed(1)} ชม. × ฿${emp.otRate})</span><span>${fmtMoney(otPay)}</span></div>
+    ${advList.map(a=>`<div class="row" style="padding:7px 0;border-bottom:1px solid var(--line);"><span class="muted" style="color:var(--red);">หักเบิก ${thaiDate(a.date)}${a.note?" ("+a.note+")":""}</span><span style="color:var(--red);">-${fmtMoney(a.amount)}</span></div>`).join("")}
+    <div class="net-box" style="margin-top:12px;"><span class="label">ยอดต้องจ่าย</span><span class="amount">${fmtMoney(net)}</span></div>
+    <button class="big-btn ${paid?"red":"amber"}" id="tgPaid" style="margin-top:12px;">${paid?"ยกเลิกสถานะจ่ายแล้ว":"✓ บันทึกว่าจ่ายแล้ว"}</button>`;
+  main.appendChild(sc);
+  sc.querySelector("#tgPaid").onclick=async()=>{
+    PAY_STATUS[pid]={paid:!paid,paidAt:!paid?new Date().toISOString():null};
+    await sset("payroll-status",PAY_STATUS);render();
+  };
+
+  // attendance detail
+  if(attRows.length){
+    const ac=document.createElement("div");ac.className="card";
+    ac.innerHTML=`<h2>ประวัติเข้างาน</h2><table><thead><tr><th>วันที่</th><th>เข้า</th><th>ออก</th><th>OT</th></tr></thead><tbody>${attRows.join("")}</tbody></table>`;
+    main.appendChild(ac);
+  }
+
+  // advance detail
+  if(advList.length){
+    const adc=document.createElement("div");adc.className="card";
+    adc.innerHTML=`<h2>รายการเบิกในงวดนี้</h2>`+
+      advList.map(a=>`<div class="advance-item"><div><div style="font-weight:600;">${thaiDate(a.date)}</div><div class="muted">${a.note||"ไม่มีหมายเหตุ"}</div></div><span style="font-weight:800;color:var(--red);">-${fmtMoney(a.amount)}</span></div>`).join("");
+    main.appendChild(adc);
+  }
+}
+
+// ---- TAB: SETTINGS ----
+function rTabSettings(main){
+  const card=document.createElement("div");card.className="card";
+  card.innerHTML=`<h2>ตั้งค่าร้าน</h2>
+    <div class="field"><label>ชื่อร้าน</label><input id="sn" value="${CFG.shopName}"></div>
+    <div class="field"><label>เวลาเลิกงานปกติ (คำนวณโอที)</label><input id="et" type="time" value="${CFG.workEndTime}"></div>
+    <div class="field"><label>รหัสผ่านเจ้าของ (4 หลัก)</label><input id="op" maxlength="4" value="${CFG.ownerPin}"></div>
+    <button class="big-btn" id="sv" style="margin-top:10px;">บันทึก</button>`;
+  main.appendChild(card);
+  card.querySelector("#sv").onclick=async()=>{
+    CFG.shopName=card.querySelector("#sn").value.trim()||CFG.shopName;
+    CFG.workEndTime=card.querySelector("#et").value||CFG.workEndTime;
+    CFG.ownerPin=card.querySelector("#op").value.trim().padStart(4,"0").slice(0,4);
+    await sset("settings",CFG);alert("บันทึกแล้ว");render();
+  };
+}
+
+// ---- BOOT ----
+(async function(){
+  document.getElementById("app").innerHTML=`<div class="center-screen"><div class="logo">⏳</div><div class="muted">กำลังโหลด...</div></div>`;
+  await loadAll();render();
+})();
+</script>
+</body>
+</html>
